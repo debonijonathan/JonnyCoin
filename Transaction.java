@@ -5,10 +5,10 @@ import java.security.KeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.util.Date;
-
 
 import jdk.nashorn.internal.runtime.JSONFunctions;
 
@@ -47,7 +47,7 @@ class Transaction {
         }
     }
 
-    boolean isValidTransaction() {
+    boolean isValidTransaction(Key pub) {
         if (hash != calculateHash())
             return false;
         if (sender.equals(receiver))
@@ -56,21 +56,21 @@ class Transaction {
             return false;
         if (signature.length <= 0)
             return false;
+        if (!isValid(pub)) {
+            return false;
+        }
 
         return true;
     }
 
-    boolean signTransaction(Key senderKey, Key receiverKey) {
+    boolean signTransaction(Key privateKey) {
         if (hash != calculateHash())
-            return false;
-
-        if (senderKey != receiverKey)
             return false;
 
         Signature sign;
         try {
             sign = Signature.getInstance("SHA256withRSA");
-            sign.initSign((PrivateKey) receiverKey);
+            sign.initSign((PrivateKey) privateKey);
             sign.update((stringJson()).getBytes("UTF8"));
             byte[] signatureBytes = sign.sign();
             signature = signatureBytes;
@@ -79,6 +79,22 @@ class Transaction {
             e.printStackTrace();
         }
         return true;
+    }
+
+    boolean isValid(Key publicKey) {
+        Signature sign;
+        try{
+            sign = Signature.getInstance("SHA256withRSA");
+            sign.initVerify((PublicKey) publicKey);
+            sign.update((stringJson()).getBytes("UTF8"));
+            if(sign.verify(signature)){
+                return true;
+            }else{
+                return false;
+            }
+        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException | UnsupportedEncodingException e) {
+            return false;
+        }
     }
     
     private String stringJson(){

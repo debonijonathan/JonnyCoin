@@ -11,16 +11,18 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashSet;
 
+
 class Blockchain {
     private final ArrayList<Block> chains;
     ArrayList<Transaction> pendingTransactions;
-    private final int difficulty;
-    private final double minerReward;
+    private int difficulty;
+    private double minerReward;
     private int blocksize;
-    private HashSet nodes;
+    private double maximumCoin;
 
     Blockchain() {
         chains = new ArrayList<Block>();
+        maximumCoin = 3000000;
         chains.add(addGenesisBlock());
         pendingTransactions = new ArrayList<Transaction>();
         difficulty = 1;
@@ -28,67 +30,8 @@ class Blockchain {
         blocksize = 1;
     }
 
-    private void register_node(String address) {
-        try {
-            URL url = new URL(address);
-            nodes.add(url);
-        } catch (MalformedURLException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-    }
-
-    private boolean resolveConflicts(){
-        /*Hashset neighbors = nodes;
-        ArrayList<Block> newChain = null;
-
-        for(Url node : nodes){
-            HttpURLConnection con = (HttpURLConnection) node.openConnection();
-            con.setRequestMethod("GET");
-            int status = con.getResponseCode();
-
-            if(status == 200){
-
-            }
-        }*/
-        return true;
-    }
     private Block getLastBlock() {
         return chains.get(chains.size() - 1);
-    }
-
-    public Key generateKey() {
-        KeyPairGenerator kpg;
-        try {
-            kpg = KeyPairGenerator.getInstance("RSA");
-            kpg.initialize(2048);
-            final KeyPair kp = kpg.generateKeyPair();
-            Key pub = kp.getPublic();
-            Key pvt = kp.getPrivate();
-
-            final Base64.Encoder encoder = Base64.getEncoder();
- 
-            Writer out = new FileWriter("private.key");
-            out.write("-----BEGIN RSA PRIVATE KEY-----\n");
-            out.write(encoder.encodeToString(pvt.getEncoded()));
-            out.write("\n-----END RSA PRIVATE KEY-----\n");
-            out.close();
-           
-            out = new FileWriter("public.pub");
-            out.write("-----BEGIN RSA PUBLIC KEY-----\n");
-            out.write(encoder.encodeToString(pub.getEncoded()));
-            out.write("\n-----END RSA PUBLIC KEY-----\n");
-            out.close();
-
-            return pub;
-
-        } catch (final NoSuchAlgorithmException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }catch(IOException io){
-            io.printStackTrace();
-        }
-        return null;
     }
 
     public boolean addTransaction(String sender, String receiver, double amount, Key senderKey, Key receiverKey){
@@ -98,23 +41,43 @@ class Blockchain {
         }
 
         Transaction transaction = new Transaction(sender, receiver, amount);
-        transaction.signTransaction(senderKey, receiverKey);
+        transaction.signTransaction(senderKey);
 
-        if(transaction.isValidTransaction()){
+        if(transaction.isValidTransaction(receiverKey)){
             System.out.println("IS NOT VALID!!");
             return false;
+        }else{
+            System.out.println("IS VALID!!");
         }
 
-        
-        pendingTransactions.add(transaction);
+        if((getBalance(sender) - amount) > 0)
+            pendingTransactions.add(transaction);
         return true;
     }
     
+    public boolean isChainValid(){
+        for(int i = 1; i < chains.size();i++){
+            Block currentBlock = chains.get(i);
+            Block previousBlock = chains.get(i-1);
+
+            if(!(currentBlock.hash).equals(currentBlock.calculateHash())){
+                return false;
+            }
+            
+            if(!(currentBlock.prev.hash).equals(previousBlock.hash)){
+                return false;
+            }
+
+        }
+        return true;
+    }
+
+
     private Block addGenesisBlock(){
-        final Transaction firstTransaction = new Transaction("System","Totana",100);
+        final Transaction firstTransaction = new Transaction("System","Totana",maximumCoin);
         ArrayList<Transaction> transactions = new ArrayList<>();
         transactions.add(firstTransaction);
-        final Block firstBlock = new Block(transactions,System.currentTimeMillis(),0);
+        Block firstBlock = new Block(transactions,System.currentTimeMillis(),0);
         firstBlock.prev = null;
         return firstBlock;
 
@@ -139,6 +102,9 @@ class Blockchain {
                 chains.add(tmpBlock);
                 
             }
+
+            maximumCoin -= minerReward;
+            
             final Transaction payMiner = new Transaction("MinerReward", miner,minerReward);
             pendingTransactions.add(payMiner);
         }
@@ -180,7 +146,6 @@ class Blockchain {
             }  
         }
 
-        //Gift for all new users
         return balance;
     }
 }

@@ -26,24 +26,20 @@ class Block {
         }
 
         while (!subHash.equals(hashPuzzle)) {
-            System.out.println("\nNonce " + nonce);
-            System.out.println("Hash " + hash);
-            System.out.println("Hash we want " + hashPuzzle);
             nonce += 1;
             hash = calculateHash();
             subHash = hash.substring(0, difficulty);
             try {
                 Thread.sleep(50);
             } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         }
 
-        System.out.println("Block Mined! With the Nonce = "+ nonce);
+        System.out.println("Block Mined! With the Nonce = "+ nonce +" HASH "+ hash);
         return true;
     }
-    private String calculateHash() {
+    String calculateHash() {
         try{
             String data ="";
             for(Transaction t :transactions)
