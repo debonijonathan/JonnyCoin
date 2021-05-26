@@ -1,3 +1,5 @@
+package com.jonathandeboni.jcoin;
+
 import java.security.Key;
 
 public class JonnyCoin {

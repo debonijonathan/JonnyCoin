@@ -1,3 +1,6 @@
+package com.jonathandeboni.jcoin;
+
+
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.Key;

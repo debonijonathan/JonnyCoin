@@ -1,3 +1,6 @@
+package com.jonathandeboni.jcoin;
+
+
 import java.security.MessageDigest;
 import java.util.ArrayList;
 

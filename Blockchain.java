@@ -1,3 +1,6 @@
+package com.jonathandeboni.jcoin;
+
+
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
@@ -11,9 +14,12 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashSet;
 
+import jdk.nashorn.internal.ir.Block;
+
 
 class Blockchain {
     private final ArrayList<Block> chains;
+    private final ArrayList<URL> nodes;
     ArrayList<Transaction> pendingTransactions;
     private int difficulty;
     private double minerReward;
@@ -22,12 +28,45 @@ class Blockchain {
 
     Blockchain() {
         chains = new ArrayList<Block>();
+        nodes = new ArrayList<Block>();
         maximumCoin = 3000000;
         chains.add(addGenesisBlock());
         pendingTransactions = new ArrayList<Transaction>();
         difficulty = 1;
         minerReward = 20;
         blocksize = 1;
+    }
+
+    private void registerNode(String address){
+        URL url = new URL(address);
+        if(!nodes.contains(url))
+            nodes.add(url);
+    }
+
+    private void resolveConflicts(){
+        Blockchain newChain = null;
+
+        int maxLength = chains.size();
+
+        for(URL url : nodes){
+            try {
+                URL myURL = new URL("http://example.com/");
+                URLConnection myURLConnection = myURL.openConnection();
+                connection.setRequestMethod("GET");
+                myURLConnection.connect();
+
+                int code = connection.getResponseCode();
+            } 
+            catch (MalformedURLException e) { 
+                // new URL() failed
+                // ...
+            } 
+            catch (IOException e) {   
+                // openConnection() failed
+                // ...
+            }
+        }
+        //RESOLVE
     }
 
     private Block getLastBlock() {
