@@ -1,9 +1,12 @@
+import java.security.InvalidAlgorithmParameterException;
 import java.security.Key;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.util.Base64;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.spec.ECGenParameterSpec;
 
 public class Wallet{
     public Key privateKey;
@@ -12,20 +15,24 @@ public class Wallet{
 
     public Wallet(){
         generateKeyPair();	
-        name = calculateHash();
 	}
 		
 	public void generateKeyPair() {
         KeyPairGenerator kpg;
+        ECGenParameterSpec ecSpec;
         try {
-            kpg = KeyPairGenerator.getInstance("RSA");
-            kpg.initialize(2048);
+        	ecSpec = new ECGenParameterSpec("secp256k1");
+
+            kpg = KeyPairGenerator.getInstance("EC");
+            kpg.initialize(ecSpec, new SecureRandom());
             final KeyPair kp = kpg.generateKeyPair();
             publicKey = kp.getPublic();
             privateKey = kp.getPrivate();
+            
+            name = Base64.getEncoder().encodeToString(publicKey.getEncoded());;
 
 
-        } catch (final NoSuchAlgorithmException e) {
+        } catch (final NoSuchAlgorithmException | InvalidAlgorithmParameterException e) {
             e.printStackTrace();
         }
     }

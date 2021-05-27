@@ -1,19 +1,22 @@
-package com.jonathandeboni.jcoin;
-
 
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.KeyException;
+import java.security.KeyFactory;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
+import java.security.spec.EncodedKeySpec;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
 import java.util.Date;
+import org.json.simple.JSONObject;
 
-import jdk.nashorn.internal.runtime.JSONFunctions;
 
 class Transaction {
     String sender;
@@ -21,7 +24,7 @@ class Transaction {
     double amount;
     long time;
     String hash;
-    byte[] signature;
+    String signature;
 
     Transaction(String sender, String receiver, double amount) {
         this.sender = sender;
@@ -29,6 +32,16 @@ class Transaction {
         this.amount = amount;
         time = System.currentTimeMillis();
         hash = calculateHash();
+        signature ="";
+    }
+    
+    Transaction(String sender, String receiver, double amount, long time, String hash, String signature) {
+        this.sender = sender;
+        this.receiver = receiver;
+        this.amount = amount;
+        this.time = time;
+        this.hash = hash;
+        this.signature = signature;
     }
 
     private String calculateHash() {
@@ -50,58 +63,83 @@ class Transaction {
         }
     }
 
-    boolean isValidTransaction(Key pub) {
-        if (hash != calculateHash())
-            return false;
-        if (sender.equals(receiver))
-            return false;
-        if (amount < 0)
-            return false;
-        if (signature.length <= 0)
-            return false;
-        if (!isValid(pub)) {
+    boolean isValidTransaction() {
+        if (!hash.equals(calculateHash())) {
+        	System.out.println("ERR #1 : Hash different");
             return false;
         }
+        if (sender.equals(receiver)) {
+        	System.out.println("ERR #2 : Sender equals to receiver!");
+            return false;
+        }
+        if (amount < 0) {
+        	System.out.println("ERR #3 : Amount under 0!");
+            return false;
+        }
+        if(!sender.equals("MinerReward")) {
+	        if (signature.equals("")) {
+	        	System.out.println("ERR #4 : Signature don't exist!");
+	            return false;
+	        }else if (!isValid()) {
+	        	System.out.println("ERR #5 : Validation Signature!");
+	            return false;
+	        }
+        }
+
 
         return true;
     }
 
     boolean signTransaction(Key privateKey) {
-        if (hash != calculateHash())
+        if (!hash.equals(calculateHash()))
             return false;
 
         Signature sign;
+
         try {
-            sign = Signature.getInstance("SHA256withRSA");
+            sign = Signature.getInstance("SHA256withECDSA");
             sign.initSign((PrivateKey) privateKey);
             sign.update((stringJson()).getBytes("UTF8"));
             byte[] signatureBytes = sign.sign();
-            signature = signatureBytes;
-            System.out.println("Transaction Signed!");
+            signature = Base64.getEncoder().encodeToString(signatureBytes);
         } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException | UnsupportedEncodingException e) {
+        	System.out.println("ERR #6");
             e.printStackTrace();
         }
         return true;
     }
 
-    boolean isValid(Key publicKey) {
+    boolean isValid() {
         Signature sign;
+        boolean result = false;
         try{
-            sign = Signature.getInstance("SHA256withRSA");
-            sign.initVerify((PublicKey) publicKey);
-            sign.update((stringJson()).getBytes("UTF8"));
-            if(sign.verify(signature)){
-                return true;
-            }else{
-                return false;
-            }
-        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException | UnsupportedEncodingException e) {
-            return false;
+        	
+        	Signature ecdsaVerify = Signature.getInstance("SHA256withECDSA");
+
+        	EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(Base64.getDecoder().decode(sender));
+
+        	KeyFactory keyFactory = KeyFactory.getInstance("EC");
+        	PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
+        	
+        	ecdsaVerify.initVerify(publicKey);
+        	ecdsaVerify.update((stringJson()).getBytes("UTF8"));
+        	result = ecdsaVerify.verify(Base64.getDecoder().decode(signature));
+        	
+        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException | UnsupportedEncodingException | InvalidKeySpecException e) {
+            return result;
         }
+        
+        return result;
     }
     
     private String stringJson(){
-        return "{sender: "+sender+", receiver:"+receiver+", amount:"+amount+", time:"+time+"}";
+    	JSONObject transaction = new JSONObject();
+    	transaction.put("sender",sender);
+    	transaction.put("receiver",receiver);
+    	transaction.put("amount",amount);
+    	transaction.put("time",time);
+    	transaction.put("hash",hash);
+        return transaction.toString();
     }
 
     @Override

@@ -1,4 +1,3 @@
-package com.jonathandeboni.jcoin;
 
 import java.security.Key;
 
@@ -12,21 +11,22 @@ public class JonnyCoin {
         
         
         
-        blockchain.addTransaction("Totana",walletB.name, 300, walletA.privateKey, walletB.publicKey);
-        blockchain.addTransaction("Totana",walletA.name, 30, walletA.privateKey, walletB.publicKey);
-        blockchain.addTransaction(walletA.name,walletB.name, 10, walletA.privateKey, walletB.publicKey);
-        blockchain.addTransaction(walletA.name,walletB.name, 100, walletA.privateKey, walletB.publicKey);
-        blockchain.addTransaction(walletB.name,walletA.name, 5, walletA.privateKey, walletB.publicKey);
+        blockchain.addTransaction("Totana",walletB.name, 75, walletA.privateKey);
+        blockchain.addTransaction("Totana",walletA.name, 100, walletA.privateKey);
+        blockchain.addTransaction(walletA.name,walletB.name, 10, walletA.privateKey);
+        blockchain.addTransaction(walletA.name,walletB.name, 40, walletA.privateKey);
+        blockchain.addTransaction(walletB.name,walletA.name, 5, walletB.privateKey);
 
 
         blockchain.minePendingTransactions("Totana");
 
-        System.out.println(blockchain.isChainValid());
-
-        blockchain.printBlockchain();
+        String encoded = blockchain.chainJSonEncode();
+        System.out.println(encoded);
 
         System.out.println("Balance of "+walletA.name +" : "+ blockchain.getBalance(walletA.name));
         System.out.println("Balance of "+walletB.name +" : "+ blockchain.getBalance(walletB.name));
+
+        
 
     }
 }

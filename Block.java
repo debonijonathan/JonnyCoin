@@ -1,5 +1,3 @@
-package com.jonathandeboni.jcoin;
-
 
 import java.security.MessageDigest;
 import java.util.ArrayList;
@@ -20,6 +18,16 @@ class Block {
         this.nonce = 0;
         this.hash = this.calculateHash();
     }
+    
+    Block(ArrayList<Transaction> transactions, long time, int index, Block prev, String hash, int nonce) {
+        this.transactions = transactions;
+        this.time = time;
+        this.index = index;
+        this.prev = prev;
+        this.nonce = nonce;
+        this.hash = hash;
+    }
+   
 
     boolean mineBlock(int difficulty) {
         String hashPuzzle = "";
