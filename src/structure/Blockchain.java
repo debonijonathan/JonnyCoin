@@ -1,3 +1,4 @@
+package structure;
 
 
 import java.io.BufferedReader;
@@ -26,7 +27,7 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 
-class Blockchain {
+public class Blockchain {
     private ArrayList<Block> chains;
     private final ArrayList<URL> nodes;
     ArrayList<Transaction> pendingTransactions;
@@ -35,7 +36,7 @@ class Blockchain {
     private int blocksize;
     private double maximumCoin;
 
-    Blockchain() {
+    public Blockchain() {
         chains = new ArrayList<Block>();
         nodes = new ArrayList<URL>();
         maximumCoin = 3000000;
@@ -46,6 +47,38 @@ class Blockchain {
         blocksize = 5;
     }
 
+    public void setInformationBlockchain(double inCirculation) {
+    	double diff = maximumCoin - inCirculation;
+    	if(diff < 1000000 && diff >= 50000) {
+            difficulty = 31;
+            minerReward = 128;
+    	}else if(diff < 500000 && diff >= 100000) {
+            difficulty = 62;
+            minerReward = 64;
+    	}else if(diff < 100000 && diff >= 10000) {
+            difficulty = 93;
+            minerReward = 32;
+    	}else if(diff < 10000 && diff >= 1000) {
+            difficulty = 124;
+            minerReward = 16;
+    	}else if(diff < 1000 && diff >= 100) {
+            difficulty = 155;
+            minerReward = 8;
+    	}else if(diff < 100 && diff >= 10) {
+            difficulty = 186;
+            minerReward = 4;
+    	}else if(diff < 10 && diff >= 1) {
+            difficulty = 217;
+            minerReward = 2;
+    	}else if(diff < 1 && diff >= 0.01) {
+            difficulty = 248;
+            minerReward = 1;
+    	}else if(diff == 0) {
+            difficulty = 255;
+            minerReward = 0;
+    	}
+    }
+    
     public void registerNode(String address){
         URL url;
 		try {
@@ -76,6 +109,7 @@ class Blockchain {
           is.close();
         }
       }
+    
     
     public boolean checkChain(String jsonText) throws ParseException {
     	ArrayList<Block> newChain = new ArrayList<>();
@@ -111,6 +145,7 @@ class Blockchain {
 			if(isChainValid(newChain) && correctTrans)
 				chains = newChain;
 		}
+		setInformationBlockchain(getBalance("Totana"));
 
 		return true;
 				
@@ -174,7 +209,7 @@ class Blockchain {
 
 
     private Block addGenesisBlock(){
-        final Transaction firstTransaction = new Transaction("System","Totana",maximumCoin);
+        final Transaction firstTransaction = new Transaction("System","Totana",10);
         ArrayList<Transaction> transactions = new ArrayList<>();
         transactions.add(firstTransaction);
         Block firstBlock = new Block(transactions,System.currentTimeMillis(),0);
@@ -201,6 +236,9 @@ class Blockchain {
                 tmpBlock.prev = getLastBlock();
                 tmpBlock.mineBlock(difficulty);
                 
+                /*
+                 * TO DO
+                 */
                 for(Transaction t : partial) {
                 	pendingTransactions.remove(t);
                 }
@@ -210,7 +248,7 @@ class Blockchain {
 
             maximumCoin -= minerReward;
             
-            final Transaction payMiner = new Transaction("MinerReward", miner,minerReward);
+            final Transaction payMiner = new Transaction("System", miner,minerReward);
             pendingTransactions.add(payMiner);
         }
         return true;
@@ -273,4 +311,6 @@ class Blockchain {
 
         return balance;
     }
+    
 }
+

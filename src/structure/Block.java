@@ -1,3 +1,4 @@
+package structure;
 
 import java.security.MessageDigest;
 import java.util.ArrayList;

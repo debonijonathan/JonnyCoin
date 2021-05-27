@@ -1,3 +1,4 @@
+package structure;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.Key;
 import java.security.KeyPair;

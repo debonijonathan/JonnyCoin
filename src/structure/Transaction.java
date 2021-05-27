@@ -1,3 +1,4 @@
+package structure;
 
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
@@ -68,6 +69,11 @@ class Transaction {
         	System.out.println("ERR #1 : Hash different");
             return false;
         }
+        if (sender == null || receiver == null) {
+        	System.out.println("ERR #6 : No valid transaction!");
+            return false;
+        }
+        
         if (sender.equals(receiver)) {
         	System.out.println("ERR #2 : Sender equals to receiver!");
             return false;
@@ -76,7 +82,7 @@ class Transaction {
         	System.out.println("ERR #3 : Amount under 0!");
             return false;
         }
-        if(!sender.equals("MinerReward")) {
+        if(!sender.equals("System")) {
 	        if (signature.equals("")) {
 	        	System.out.println("ERR #4 : Signature don't exist!");
 	            return false;
